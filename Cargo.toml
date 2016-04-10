@@ -1,0 +1,7 @@
+[package]
+name = "rust-dns-https"
+version = "0.1.0"
+authors = ["Graham Mosley <gmosley@seas.upenn.edu>", "David Cao <davidcao@seas.upenn.edu"]
+
+[dependencies]
+dns-parser = { git = "https://github.com/david-cao/dns-parser" }

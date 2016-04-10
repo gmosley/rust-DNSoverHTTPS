@@ -1,0 +1,32 @@
+[root]
+name = "rust-dns-https"
+version = "0.1.0"
+dependencies = [
+ "dns-parser 0.3.1 (git+https://github.com/david-cao/dns-parser)",
+]
+
+[[package]]
+name = "byteorder"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "dns-parser"
+version = "0.3.1"
+source = "git+https://github.com/david-cao/dns-parser#ad5633a1ee7dc3978a665f7b94ad5d4da3204dec"
+dependencies = [
+ "byteorder 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "matches 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quick-error 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "matches"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "quick-error"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
