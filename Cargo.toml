@@ -5,3 +5,4 @@ authors = ["Graham Mosley <gmosley@seas.upenn.edu>", "David Cao <davidcao@seas.u
 
 [dependencies]
 dns-parser = { git = "https://github.com/david-cao/dns-parser" }
+hyper = "0.8.0"
