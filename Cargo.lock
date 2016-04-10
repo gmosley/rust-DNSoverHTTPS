@@ -4,6 +4,7 @@ version = "0.1.0"
 dependencies = [
  "dns-parser 0.3.1 (git+https://github.com/david-cao/dns-parser)",
  "hyper 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -30,7 +31,7 @@ dependencies = [
 [[package]]
 name = "dns-parser"
 version = "0.3.1"
-source = "git+https://github.com/david-cao/dns-parser#ad5633a1ee7dc3978a665f7b94ad5d4da3204dec"
+source = "git+https://github.com/david-cao/dns-parser#c3948d352cfd1a2d489c982602e30804f148cf7a"
 dependencies = [
  "byteorder 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "matches 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
