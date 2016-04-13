@@ -1,7 +1,7 @@
 //! Documentation for rust-DNSoverHTTPS.
 //! Most of the work so far has been on our fork of 
 //! https://github.com/david-cao/dns-parser with docs
-//! located at https://github.com/david-cao/rustdocs.
+//! located at http://david-cao.github.io/rustdocs/dns_parser/index.html.
 
 extern crate dns_parser;
 extern crate hyper;
