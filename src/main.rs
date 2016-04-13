@@ -3,11 +3,14 @@
 //! https://github.com/david-cao/dns-parser with docs
 //! located at http://david-cao.github.io/rustdocs/dns_parser/index.html.
 
+#![feature(custom_derive, plugin)]
+#![plugin(serde_macros)]
+
+extern crate serde;
+extern crate serde_json;
+
 extern crate dns_parser;
 extern crate hyper;
-extern crate rustc_serialize;
-
-use rustc_serialize::json::Json;
 
 use std::io::Read;
 
@@ -76,5 +79,7 @@ fn make_request(question : &Question, id: u16) {
     res.read_to_string(&mut body).unwrap();
 
     println!("{}", &body);
+
+    // TODO: Milestone 2: Implement serde deserialization
 
 }
