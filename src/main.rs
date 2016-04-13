@@ -1,3 +1,8 @@
+//! Documentation for rust-DNSoverHTTPS.
+//! Most of the work so far has been on our fork of 
+//! https://github.com/david-cao/dns-parser with docs
+//! located at https://github.com/david-cao/rustdocs.
+
 extern crate dns_parser;
 extern crate hyper;
 extern crate rustc_serialize;
@@ -12,9 +17,10 @@ use dns_parser::{Packet, Name, Question, QueryType};
 use hyper::Client;
 use hyper::header::{Connection, Host};
 
-// TODO: figure out best way to get initial dns.google.com IP
+/// The IP address of dns.google.com
 const GOOGLE_IP: &'static str = "https://4.31.115.237/";
 
+/// The IP and Port to run the server on. Usually localhost:53
 const DNS_SERVER: &'static str = "127.0.0.1:53";
 
 
@@ -26,6 +32,7 @@ fn main() {
 
     let mut buf = [0; 512];
 
+    // TODO: Milestone 2: Add concurrency
     loop {
         let socket_result = socket.recv_from(&mut buf);
         
@@ -43,6 +50,8 @@ fn main() {
     }
 }
 
+
+/// Makes a Google API request given a DNS question and corresponding id
 fn make_request(question : &Question, id: u16) {
 
     // TODO: support all QueryTypes
