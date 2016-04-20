@@ -68,7 +68,7 @@ fn main() {
     }
 }
 
-/// Builds a response given a packet, and returns the bytes
+/// Builds a response given a packet, and returns the bytes.
 /// Need to create better errors.
 fn build_response(packet: Packet) -> Result<Vec<u8>, String> {
 
@@ -132,6 +132,8 @@ fn translate_question(question: &Question) -> Option<Url> {
     }
 }
 
+/// Sends an API request to dns.google.com and parses the
+/// result into an APIResponse to return.
 fn make_request(request: Url) -> APIResponse {
 
     let client = Client::new();
@@ -153,7 +155,8 @@ fn make_request(request: Url) -> APIResponse {
 }
 
 
-/// Workaround for dns_pasrser
+/// Workaround for dns_pasrser, this is done since
+/// dns-parser improperly formats fqdns.
 fn remove_fqdn_dot (domain_name: &str) -> String {
     let mut domain_name_string = domain_name.to_owned();
     domain_name_string.pop();
