@@ -39,7 +39,11 @@ const DNS_SERVER: &'static str = "127.0.0.1:53";
 
 fn main() {
 
-    let socket = UdpSocket::bind(DNS_SERVER).unwrap();
+    let bind_attempt = UdpSocket::bind(DNS_SERVER);
+    if bind_attempt.is_err() {
+        panic!("Unable to bind {:?}. Make sure you have sufficient user permissions", DNS_SERVER);
+    }
+    let socket = bind_attempt.unwrap();
 
     println!("{} bound", DNS_SERVER);
 
