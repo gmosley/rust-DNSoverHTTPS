@@ -36,7 +36,8 @@ const GOOGLE_IP: &'static str = "https://4.31.115.237/";
 /// The IP and Port to run the server on. Usually localhost:53
 const DNS_SERVER: &'static str = "127.0.0.1:53";
 
-
+/// Bind a UdpSocket for DNS_SERVER
+/// Listens for DNS packets and returns a response if no errors occur
 fn main() {
 
     let bind_attempt = UdpSocket::bind(DNS_SERVER);
@@ -69,7 +70,7 @@ fn main() {
 }
 
 /// Builds a response given a packet, and returns the bytes
-/// Need to create better errors.
+/// Note: Only handles A questions. Need to create better errors.
 fn build_response(packet: Packet) -> Result<Vec<u8>, String> {
 
     if packet.header.questions == 1 {
