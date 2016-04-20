@@ -16,6 +16,7 @@ pub struct APIAnswer {
     pub data : String,
 }
 
+/// The Main Google Response Struct. Can contain APIQuestions and APIResponses.
 #[derive(Deserialize, Debug)]
 pub struct APIResponse {
     pub Status : u32,

@@ -1,7 +1,7 @@
 //! Documentation for rust-DNSoverHTTPS.
-//! Most of the work so far has been on our fork of
-//! https://github.com/david-cao/dns-parser with docs
-//! located at http://david-cao.github.io/rustdocs/dns_parser/index.html.
+//! We also have documentation of our fork of
+//! https://github.com/david-cao/dns-parser
+//! at http://david-cao.github.io/rustdocs/dns_parser/index.html.
 
 #![feature(custom_derive, plugin)]
 #![plugin(serde_macros)]
@@ -36,7 +36,7 @@ const GOOGLE_IP: &'static str = "https://4.31.115.237/";
 /// The IP and Port to run the server on. Usually localhost:53
 const DNS_SERVER: &'static str = "127.0.0.1:53";
 
-/// Bind a UdpSocket for DNS_SERVER
+/// Bind a UdpSocket for DNS_SERVER.
 /// Listens for DNS packets and returns a response if no errors occur
 fn main() {
 
@@ -69,7 +69,7 @@ fn main() {
     }
 }
 
-/// Builds a response given a packet, and returns the bytes
+/// Builds a response given a packet, and returns the bytes.
 /// Note: Only handles A questions. Need to create better errors.
 fn build_response(packet: Packet) -> Result<Vec<u8>, String> {
 
@@ -133,6 +133,8 @@ fn translate_question(question: &Question) -> Option<Url> {
     }
 }
 
+/// Sends an API request to GOOGLE_IP and parses the
+/// result into an APIResponse to return.
 fn make_request(request: Url) -> APIResponse {
 
     let client = Client::new();
@@ -154,7 +156,8 @@ fn make_request(request: Url) -> APIResponse {
 }
 
 
-/// Workaround for dns_pasrser
+/// Workaround for dns_pasrser, this is done since
+/// dns-parser improperly formats fqdns.
 fn remove_fqdn_dot (domain_name: &str) -> String {
     let mut domain_name_string = domain_name.to_owned();
     domain_name_string.pop();
