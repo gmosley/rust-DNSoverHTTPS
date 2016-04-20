@@ -1,31 +1,33 @@
+#![allow(non_snake_case)]
+
 #[derive(Deserialize, Debug)]
 pub struct APIQuestion {
-    name : String,
+    pub name : String,
     #[serde(rename="type")]
-    question_type : u32,
+    pub question_type : u16,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct APIAnswer {
-    name : String,
+    pub name : String,
     #[serde(rename="type")]
-    answer_type: u32,
-    TTL: u32,
-    data : String,
+    pub answer_type: u16,
+    pub TTL: u32,
+    pub data : String,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct APIResponse {
-    Status : u32,
-    TC : bool,
-    RD : bool, // Should always be true for Google Public DNS
-    RA : bool, // Should always be true for Google Public DNS
-    AD : bool,
-    CD : bool,
+    pub Status : u32,
+    pub TC : bool,
+    pub RD : bool, // Should always be true for Google Public DNS
+    pub RA : bool, // Should always be true for Google Public DNS
+    pub AD : bool,
+    pub CD : bool,
 
     #[serde(rename="Question")]
-    questions: Vec<APIQuestion>,
+    pub questions: Vec<APIQuestion>,
 
     #[serde(rename="Answer")]
-    answers: Vec<APIAnswer>,
+    pub answers: Vec<APIAnswer>,
 }

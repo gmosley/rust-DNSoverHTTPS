@@ -1,5 +1,5 @@
 //! Documentation for rust-DNSoverHTTPS.
-//! Most of the work so far has been on our fork of 
+//! Most of the work so far has been on our fork of
 //! https://github.com/david-cao/dns-parser with docs
 //! located at http://david-cao.github.io/rustdocs/dns_parser/index.html.
 
@@ -12,13 +12,21 @@ extern crate serde_json;
 extern crate dns_parser;
 extern crate hyper;
 
+extern crate byteorder;
+use byteorder::{BigEndian, ByteOrder};
+
 use std::io::Read;
 
 use std::net::UdpSocket;
-use dns_parser::{Packet, Name, Question, QueryType};
+use dns_parser::{Packet, Name, Question, QueryType, Builder, Type, QueryClass, Class, ResponseCode};
 
-use hyper::Client;
+use hyper::{Url, Client};
 use hyper::header::{Connection, Host};
+
+use std::net::Ipv4Addr;
+
+mod structs;
+use structs::{APIResponse, APIQuestion, APIAnswer};
 
 /// The IP address of dns.google.com
 const GOOGLE_IP: &'static str = "https://4.31.115.237/";
@@ -38,14 +46,51 @@ fn main() {
     // TODO: Milestone 2: Add concurrency
     loop {
         let socket_result = socket.recv_from(&mut buf);
-        
+
         match socket_result {
             Ok((amt, src)) => {
                 let buf = &mut buf[..amt];
                 let packet = Packet::parse(&buf).unwrap();
-                let id = packet.header.id;
-                for question in packet.questions {
-                    make_request(&question, id);
+
+                // only handle questions
+                if packet.header.questions == 1 {
+                    let question = &packet.questions[0];
+                    if let Some(api_request) = translate_question(&question) {
+                        let api_response = make_request(api_request);
+                        let mut dns_response = Builder::new_response(
+                            packet.header.id,
+                            ResponseCode::NoError,
+                            api_response.TC,
+                            api_response.RD,
+                            api_response.RA
+                        );
+                        for api_question in &api_response.questions {
+                            let query_type = QueryType::parse(api_question.question_type).unwrap();
+                            dns_response.add_question(
+                                &remove_fqdn_dot(&api_question.name),
+                                query_type,
+                                QueryClass::IN
+                            );
+                        }
+                        for api_answer in &api_response.answers {
+                            // only handle A responses
+                            if api_answer.answer_type == 1 {
+                                use std::str::FromStr;
+                                let ip = Ipv4Addr::from_str(&api_answer.data).unwrap();
+                                dns_response.add_answer(
+                                    &remove_fqdn_dot(&api_answer.name),
+                                    Type::A,
+                                    Class::IN,
+                                    api_answer.TTL,
+                                    BigEndian::read_u32(&ip.octets())
+                                );
+                            }
+                        }
+
+                        if let Ok(response_packet) = dns_response.build() {
+                            socket.send_to(&response_packet, &src);
+                        }
+                    }
                 }
             }
             Err(e) => panic!("Error receiving datagram: {}", e),
@@ -54,20 +99,28 @@ fn main() {
 }
 
 
-/// Makes a Google API request given a DNS question and corresponding id
-fn make_request(question : &Question, id: u16) {
+/// Translates a DNS question into a Google API Request
+fn translate_question(question: &Question) -> Option<Url> {
 
     // TODO: support all QueryTypes
     if question.qtype != QueryType::A {
-        return;
+        return None;
     }
 
-    let mut client = Client::new();
+    let url_string = GOOGLE_IP.to_owned() + "resolve?name=" + &question.qname.to_string();
 
-    let url = GOOGLE_IP.to_owned() + "resolve?name=" + &question.qname.to_string();
-    println!("\n{}\n", &url);
 
-    let mut res = client.get(&url)
+    match Url::parse(&url_string) {
+        Ok(url) => Some(url),
+        _ => None
+    }
+}
+
+fn make_request(request: Url) -> APIResponse {
+
+    let client = Client::new();
+
+    let mut res = client.get(request)
         .header(Host{
             hostname: "dns.google.com".to_owned(),
             port: None,
@@ -78,8 +131,15 @@ fn make_request(question : &Question, id: u16) {
     let mut body = String::new();
     res.read_to_string(&mut body).unwrap();
 
-    println!("{}", &body);
+    let api_response : APIResponse = serde_json::from_str(&body).unwrap();
+    api_response
 
-    // TODO: Milestone 2: Implement serde deserialization
+}
 
+
+/// Workaround for dns_pasrser
+fn remove_fqdn_dot (domain_name: &str) -> String {
+    let mut domain_name_string = domain_name.to_owned();
+    domain_name_string.pop();
+    domain_name_string
 }
