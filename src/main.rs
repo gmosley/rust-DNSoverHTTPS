@@ -25,6 +25,8 @@ use hyper::header::{Connection, Host};
 
 use std::net::Ipv4Addr;
 
+use std::thread;
+
 mod structs;
 use structs::{APIResponse, APIQuestion, APIAnswer};
 
@@ -43,55 +45,57 @@ fn main() {
 
     let mut buf = [0; 512];
 
-    // TODO: Milestone 2: Add concurrency
     loop {
         let socket_result = socket.recv_from(&mut buf);
 
         match socket_result {
             Ok((amt, src)) => {
-                let buf = &mut buf[..amt];
-                let packet = Packet::parse(&buf).unwrap();
+                let socket = socket.try_clone().unwrap();
+                thread::spawn(move || {
+                    let buf = &mut buf[..amt];
+                    let packet = Packet::parse(&buf).unwrap();
 
-                // only handle questions
-                if packet.header.questions == 1 {
-                    let question = &packet.questions[0];
-                    if let Some(api_request) = translate_question(&question) {
-                        let api_response = make_request(api_request);
-                        let mut dns_response = Builder::new_response(
-                            packet.header.id,
-                            ResponseCode::NoError,
-                            api_response.TC,
-                            api_response.RD,
-                            api_response.RA
-                        );
-                        for api_question in &api_response.questions {
-                            let query_type = QueryType::parse(api_question.question_type).unwrap();
-                            dns_response.add_question(
-                                &remove_fqdn_dot(&api_question.name),
-                                query_type,
-                                QueryClass::IN
+                    // only handle questions
+                    if packet.header.questions == 1 {
+                        let question = &packet.questions[0];
+                        if let Some(api_request) = translate_question(&question) {
+                            let api_response = make_request(api_request);
+                            let mut dns_response = Builder::new_response(
+                                packet.header.id,
+                                ResponseCode::NoError,
+                                api_response.TC,
+                                api_response.RD,
+                                api_response.RA
                             );
-                        }
-                        for api_answer in &api_response.answers {
-                            // only handle A responses
-                            if api_answer.answer_type == 1 {
-                                use std::str::FromStr;
-                                let ip = Ipv4Addr::from_str(&api_answer.data).unwrap();
-                                dns_response.add_answer(
-                                    &remove_fqdn_dot(&api_answer.name),
-                                    Type::A,
-                                    Class::IN,
-                                    api_answer.TTL,
-                                    BigEndian::read_u32(&ip.octets())
+                            for api_question in &api_response.questions {
+                                let query_type = QueryType::parse(api_question.question_type).unwrap();
+                                dns_response.add_question(
+                                    &remove_fqdn_dot(&api_question.name),
+                                    query_type,
+                                    QueryClass::IN
                                 );
                             }
-                        }
+                            for api_answer in &api_response.answers {
+                                // only handle A responses
+                                if api_answer.answer_type == 1 {
+                                    use std::str::FromStr;
+                                    let ip = Ipv4Addr::from_str(&api_answer.data).unwrap();
+                                    dns_response.add_answer(
+                                        &remove_fqdn_dot(&api_answer.name),
+                                        Type::A,
+                                        Class::IN,
+                                        api_answer.TTL,
+                                        BigEndian::read_u32(&ip.octets())
+                                    );
+                                }
+                            }
 
-                        if let Ok(response_packet) = dns_response.build() {
-                            socket.send_to(&response_packet, &src);
+                            if let Ok(response_packet) = dns_response.build() {
+                                socket.send_to(&response_packet, &src).unwrap();
+                            }
                         }
                     }
-                }
+                });
             }
             Err(e) => panic!("Error receiving datagram: {}", e),
         }
