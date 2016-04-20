@@ -54,46 +54,8 @@ fn main() {
                 thread::spawn(move || {
                     let buf = &mut buf[..amt];
                     let packet = Packet::parse(&buf).unwrap();
-
-                    // only handle questions
-                    if packet.header.questions == 1 {
-                        let question = &packet.questions[0];
-                        if let Some(api_request) = translate_question(&question) {
-                            let api_response = make_request(api_request);
-                            let mut dns_response = Builder::new_response(
-                                packet.header.id,
-                                ResponseCode::NoError,
-                                api_response.TC,
-                                api_response.RD,
-                                api_response.RA
-                            );
-                            for api_question in &api_response.questions {
-                                let query_type = QueryType::parse(api_question.question_type).unwrap();
-                                dns_response.add_question(
-                                    &remove_fqdn_dot(&api_question.name),
-                                    query_type,
-                                    QueryClass::IN
-                                );
-                            }
-                            for api_answer in &api_response.answers {
-                                // only handle A responses
-                                if api_answer.answer_type == 1 {
-                                    use std::str::FromStr;
-                                    let ip = Ipv4Addr::from_str(&api_answer.data).unwrap();
-                                    dns_response.add_answer(
-                                        &remove_fqdn_dot(&api_answer.name),
-                                        Type::A,
-                                        Class::IN,
-                                        api_answer.TTL,
-                                        BigEndian::read_u32(&ip.octets())
-                                    );
-                                }
-                            }
-
-                            if let Ok(response_packet) = dns_response.build() {
-                                socket.send_to(&response_packet, &src).unwrap();
-                            }
-                        }
+                    if let Ok(response_packet) = build_response(packet) {
+                        socket.send_to(&response_packet, &src).unwrap();
                     }
                 });
             }
@@ -102,6 +64,52 @@ fn main() {
     }
 }
 
+/// Builds a response given a packet, and returns the bytes
+/// Need to create better errors.
+fn build_response(packet: Packet) -> Result<Vec<u8>, String> {
+
+    if packet.header.questions == 1 {
+        let question = &packet.questions[0];
+        if let Some(api_request) = translate_question(&question) {
+            let api_response = make_request(api_request);
+            let mut dns_response = Builder::new_response(
+                packet.header.id,
+                ResponseCode::NoError,
+                api_response.TC,
+                api_response.RD,
+                api_response.RA
+            );
+            for api_question in &api_response.questions {
+                let query_type = QueryType::parse(api_question.question_type).unwrap();
+                dns_response.add_question(
+                    &remove_fqdn_dot(&api_question.name),
+                    query_type,
+                    QueryClass::IN
+                );
+            }
+            for api_answer in &api_response.answers {
+                // only handle A responses
+                if api_answer.answer_type == 1 {
+                    use std::str::FromStr;
+                    let ip = Ipv4Addr::from_str(&api_answer.data).unwrap();
+                    dns_response.add_answer(
+                        &remove_fqdn_dot(&api_answer.name),
+                        Type::A,
+                        Class::IN,
+                        api_answer.TTL,
+                        BigEndian::read_u32(&ip.octets())
+                    );
+                }
+            }
+            let result = dns_response.build();
+            match result {
+                Ok(bytes) => return Ok(bytes),
+                _ => return Err(String::from("Failed to build packet")),
+            }
+        }
+    }
+    Err(String::from("Packet can only have 1 question at the moment!"))
+}
 
 /// Translates a DNS question into a Google API Request
 fn translate_question(question: &Question) -> Option<Url> {
