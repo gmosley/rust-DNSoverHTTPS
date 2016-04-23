@@ -88,6 +88,7 @@ fn build_response(packet: Packet) -> Result<Vec<u8>, Error> {
                 api_response.RD,
                 api_response.RA
             );
+            // parse questions
             for api_question in &api_response.questions {
                 let query_type = QueryType::parse(api_question.question_type).unwrap();
                 dns_response.add_question(
@@ -96,23 +97,32 @@ fn build_response(packet: Packet) -> Result<Vec<u8>, Error> {
                     QueryClass::IN
                 );
             }
+            // parse answers
             for api_answer in &api_response.answers {
                 // only handle A responses
-                if api_answer.answer_type == 1 {
-                    use std::str::FromStr;
-                    let ip = Ipv4Addr::from_str(&api_answer.data).unwrap();
-                    dns_response.add_answer(
-                        &remove_fqdn_dot(&api_answer.name),
-                        Type::A,
-                        Class::IN,
-                        api_answer.TTL,
-                        BigEndian::read_u32(&ip.octets())
-                    );
-                }
+                let data = try!(api_answer.write());
+                dns_response.add_answer(
+                    &remove_fqdn_dot(&api_answer.name),
+                    Type::A,
+                    Class::IN,
+                    api_answer.TTL,
+                    data
+                );
+                // if api_answer.answer_type == 1 {
+                //     use std::str::FromStr;
+                //     let ip = Ipv4Addr::from_str(&api_answer.data).unwrap();
+                //     dns_response.add_answer(
+                //         &remove_fqdn_dot(&api_answer.name),
+                //         Type::A,
+                //         Class::IN,
+                //         api_answer.TTL,
+                //         BigEndian::read_u32(&ip.octets())
+                //     );
+                // }
             }
             let result = dns_response.build();
             match result {
-                Ok(bytes) => return Ok(bytes),
+                Ok(bytes) => { Packet::parse(&bytes).unwrap(); return Ok(bytes)},
                 Err(e) => return Err(Error::PacketBuildErr(e)),
             }
         }
