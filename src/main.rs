@@ -27,14 +27,18 @@ use std::net::Ipv4Addr;
 
 use std::thread;
 
+mod error;
+use error::Error;
+
 mod structs;
 use structs::{APIResponse, APIQuestion, APIAnswer};
 
 /// The IP address of dns.google.com
-const GOOGLE_IP: &'static str = "https://4.31.115.237/";
+const GOOGLE_IP: &'static str = "https://4.31.115.251/";
 
 /// The IP and Port to run the server on. Usually localhost:53
 const DNS_SERVER: &'static str = "127.0.0.1:53";
+
 
 /// Bind a UdpSocket for DNS_SERVER.
 /// Listens for DNS packets and returns a response if no errors occur
@@ -71,7 +75,7 @@ fn main() {
 
 /// Builds a response given a packet, and returns the bytes.
 /// Note: Only handles A questions. Need to create better errors.
-fn build_response(packet: Packet) -> Result<Vec<u8>, String> {
+fn build_response(packet: Packet) -> Result<Vec<u8>, Error> {
 
     if packet.header.questions == 1 {
         let question = &packet.questions[0];
@@ -109,11 +113,11 @@ fn build_response(packet: Packet) -> Result<Vec<u8>, String> {
             let result = dns_response.build();
             match result {
                 Ok(bytes) => return Ok(bytes),
-                _ => return Err(String::from("Failed to build packet")),
+                Err(e) => return Err(Error::PacketBuildErr(e)),
             }
         }
     }
-    Err(String::from("Packet can only have 1 question at the moment!"))
+    Err(Error::InvalidQuestionPacketErr)
 }
 
 /// Translates a DNS question into a Google API Request

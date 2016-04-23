@@ -1,5 +1,11 @@
 #![allow(non_snake_case)]
 
+
+use error::Error;
+
+use std::net::Ipv4Addr;
+use std::str::FromStr;
+
 #[derive(Deserialize, Debug)]
 pub struct APIQuestion {
     pub name : String,
@@ -14,6 +20,32 @@ pub struct APIAnswer {
     pub answer_type: u16,
     pub TTL: u32,
     pub data : String,
+}
+
+
+
+impl APIAnswer {
+    pub fn write(&self) -> Result<Vec<u8>, Error> {
+        match self.answer_type {
+            1  =>  {
+                let ip = Ipv4Addr::from_str(&self.data).unwrap();
+                Ok(ip.octets().to_vec())
+            },
+            5  => {
+                let mut data : Vec<u8> = Vec::new();
+                let name = &self.name;
+                for label in name.split('.') {
+                    let size = label.len() as u8;
+                    data.push(size);
+                    data.extend(label.as_bytes());
+                }
+                Ok(data)
+            }
+            // 6  =>
+            // 28 =>
+            x => Err(Error::UnsupportedResponseType(x)) 
+        }
+    }
 }
 
 /// The Main Google Response Struct. Can contain APIQuestions and APIResponses.
