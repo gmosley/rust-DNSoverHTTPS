@@ -41,7 +41,17 @@ impl APIAnswer {
                     data.extend(label.as_bytes());
                 }
                 Ok(data)
-            }
+            },
+            12 => {
+                let mut data : Vec<u8> = Vec::new();
+                let name = &self.data;
+                for label in name.split('.') {
+                    let size = label.len() as u8;
+                    data.push(size);
+                    data.extend(label.as_bytes());
+                }
+                Ok(data)
+            },
             28 => {
                 let ip = Ipv6Addr::from_str(&self.data).unwrap();
                 let mut ipv6_bytes : Vec<u8> = Vec::new();

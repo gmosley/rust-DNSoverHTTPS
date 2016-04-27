@@ -144,6 +144,7 @@ fn translate_question(question: &Question) -> Option<Url> {
     let name = match question.qtype {
         QueryType::A => "A",
         QueryType::AAAA => "AAAA",
+        QueryType::PTR => "PTR",
         _ => return None
     };
 
