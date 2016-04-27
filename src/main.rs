@@ -103,7 +103,7 @@ fn build_response(packet: Packet) -> Result<Vec<u8>, Error> {
                 let data = try!(api_answer.write());
                 dns_response.add_answer(
                     &remove_fqdn_dot(&api_answer.name),
-                    Type::A,
+                    Type::parse(api_answer.answer_type).unwrap(),
                     Class::IN,
                     api_answer.TTL,
                     data
@@ -122,13 +122,20 @@ fn build_response(packet: Packet) -> Result<Vec<u8>, Error> {
             }
             let result = dns_response.build();
             match result {
-                Ok(bytes) => { Packet::parse(&bytes).unwrap(); return Ok(bytes)},
+                Ok(bytes) => { 
+                    println!("{:?}", packet.questions[0].qname.to_string());
+                    println!("{:?}", bytes);
+                    Packet::parse(&bytes).unwrap();
+                    return Ok(bytes)
+                },
                 Err(e) => return Err(Error::PacketBuildErr(e)),
             }
         }
     }
     Err(Error::InvalidQuestionPacketErr)
 }
+
+
 
 /// Translates a DNS question into a Google API Request
 fn translate_question(question: &Question) -> Option<Url> {

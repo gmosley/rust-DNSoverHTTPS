@@ -33,7 +33,8 @@ impl APIAnswer {
             },
             5  => {
                 let mut data : Vec<u8> = Vec::new();
-                let name = &self.name;
+                let name = &self.data;
+                println!("CNAME: {:?}", name);
                 for label in name.split('.') {
                     let size = label.len() as u8;
                     data.push(size);
