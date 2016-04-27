@@ -63,8 +63,15 @@ fn main() {
                 thread::spawn(move || {
                     let buf = &mut buf[..amt];
                     let packet = Packet::parse(&buf).unwrap();
-                    if let Ok(response_packet) = build_response(packet) {
-                        socket.send_to(&response_packet, &src).unwrap();
+                    let lookup_name = &packet.questions[0].qname.to_string();
+                    match build_response(packet) {
+                        Ok(response_packet) => {
+                            socket.send_to(&response_packet, &src).unwrap();
+                            println!("OK: {:?}", &lookup_name);
+                        },
+                        Err(e) => {
+                            println!("ERROR: {:?} {:?}", &lookup_name, e);
+                        }
                     }
                 });
             }
@@ -76,7 +83,6 @@ fn main() {
 /// Builds a response given a packet, and returns the bytes.
 /// Note: Only handles A questions. Need to create better errors.
 fn build_response(packet: Packet) -> Result<Vec<u8>, Error> {
-
     if packet.header.questions == 1 {
         let question = &packet.questions[0];
         if let Some(api_request) = translate_question(&question) {
@@ -97,56 +103,51 @@ fn build_response(packet: Packet) -> Result<Vec<u8>, Error> {
                     QueryClass::IN
                 );
             }
+
+
             // parse answers
-            for api_answer in &api_response.answers {
-                // only handle A responses
-                let data = try!(api_answer.write());
-                dns_response.add_answer(
-                    &remove_fqdn_dot(&api_answer.name),
-                    Type::parse(api_answer.answer_type).unwrap(),
-                    Class::IN,
-                    api_answer.TTL,
-                    data
-                );
-                // if api_answer.answer_type == 1 {
-                //     use std::str::FromStr;
-                //     let ip = Ipv4Addr::from_str(&api_answer.data).unwrap();
-                //     dns_response.add_answer(
-                //         &remove_fqdn_dot(&api_answer.name),
-                //         Type::A,
-                //         Class::IN,
-                //         api_answer.TTL,
-                //         BigEndian::read_u32(&ip.octets())
-                //     );
-                // }
+            if let Some(answers) = api_response.answers {
+                for api_answer in answers {
+                    let data = try!(api_answer.write());
+                    dns_response.add_answer(
+                        &remove_fqdn_dot(&api_answer.name),
+                        Type::parse(api_answer.answer_type).unwrap(),
+                        Class::IN,
+                        api_answer.TTL,
+                        data
+                    );
+                }
             }
+
             let result = dns_response.build();
             match result {
                 Ok(bytes) => { 
-                    println!("{:?}", packet.questions[0].qname.to_string());
-                    println!("{:?}", bytes);
                     Packet::parse(&bytes).unwrap();
                     return Ok(bytes)
                 },
                 Err(e) => return Err(Error::PacketBuildErr(e)),
             }
+        } else {
+            return Err(Error::InvalidQuestionPacketErr);
         }
+    } else {
+        return Err(Error::InvalidQuestionPacketErr)
     }
-    Err(Error::InvalidQuestionPacketErr)
 }
 
 
 
 /// Translates a DNS question into a Google API Request
+/// This should return a result instead of option
 fn translate_question(question: &Question) -> Option<Url> {
 
-    // TODO: support all QueryTypes
-    if question.qtype != QueryType::A {
-        return None;
-    }
+    let name = match question.qtype {
+        QueryType::A => "A",
+        QueryType::AAAA => "AAAA",
+        _ => return None
+    };
 
-    let url_string = GOOGLE_IP.to_owned() + "resolve?name=" + &question.qname.to_string();
-
+    let url_string = GOOGLE_IP.to_owned() + "resolve?type=" + name + "&name=" + &question.qname.to_string();
 
     match Url::parse(&url_string) {
         Ok(url) => Some(url),
@@ -156,6 +157,7 @@ fn translate_question(question: &Question) -> Option<Url> {
 
 /// Sends an API request to GOOGLE_IP and parses the
 /// result into an APIResponse to return.
+/// TODO: this needs to be a result
 fn make_request(request: Url) -> APIResponse {
 
     let client = Client::new();
@@ -172,6 +174,8 @@ fn make_request(request: Url) -> APIResponse {
     res.read_to_string(&mut body).unwrap();
 
     let api_response : APIResponse = serde_json::from_str(&body).unwrap();
+    // TODO check error code
+
     api_response
 
 }

@@ -3,7 +3,7 @@
 
 use error::Error;
 
-use std::net::Ipv4Addr;
+use std::net::{Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
 
 #[derive(Deserialize, Debug)]
@@ -34,7 +34,7 @@ impl APIAnswer {
             5  => {
                 let mut data : Vec<u8> = Vec::new();
                 let name = &self.data;
-                println!("CNAME: {:?}", name);
+                //println!("CNAME: {:?}", name);
                 for label in name.split('.') {
                     let size = label.len() as u8;
                     data.push(size);
@@ -42,8 +42,18 @@ impl APIAnswer {
                 }
                 Ok(data)
             }
-            // 6  =>
-            // 28 =>
+            28 => {
+                let ip = Ipv6Addr::from_str(&self.data).unwrap();
+                let mut ipv6_bytes : Vec<u8> = Vec::new();
+                // THIS REALLY NEEDS TO BE IMPROVED
+                for segment in ip.segments().iter() {
+                    let upper = segment >> 8;
+                    let lower = segment & 0b0000_0000_1111_1111;
+                    ipv6_bytes.push(upper as u8);
+                    ipv6_bytes.push(lower as u8);
+                }
+                Ok(ipv6_bytes)
+            }
             x => Err(Error::UnsupportedResponseType(x)) 
         }
     }
@@ -63,5 +73,5 @@ pub struct APIResponse {
     pub questions: Vec<APIQuestion>,
 
     #[serde(rename="Answer")]
-    pub answers: Vec<APIAnswer>,
+    pub answers: Option<Vec<APIAnswer>>,
 }

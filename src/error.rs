@@ -6,5 +6,5 @@ pub enum Error {
     DNSParserErr(dns_parser::Error),
     PacketBuildErr(Vec<u8>),
     InvalidQuestionPacketErr,
-    UnsupportedResponseType(u16)
+    UnsupportedResponseType(u16),
 }

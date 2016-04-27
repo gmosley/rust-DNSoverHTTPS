@@ -32,7 +32,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "cookie"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "openssl 0.7.10 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -44,7 +44,7 @@ dependencies = [
 [[package]]
 name = "dns-parser"
 version = "0.3.1"
-source = "git+https://github.com/david-cao/dns-parser#076a4ba54f687852c08d18eee417c4da2f42b68a"
+source = "git+https://github.com/david-cao/dns-parser#89797a92a112a7a412bbb42e519b1fb31d629bd3"
 dependencies = [
  "byteorder 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "matches 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -82,7 +82,7 @@ name = "hyper"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cookie 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cookie 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "httparse 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "language-tags 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
