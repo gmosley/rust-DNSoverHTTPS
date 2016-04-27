@@ -37,7 +37,7 @@ use structs::{APIResponse, APIQuestion, APIAnswer};
 const GOOGLE_IP: &'static str = "https://4.31.115.251/";
 
 /// The IP and Port to run the server on. Usually localhost:53
-const DNS_SERVER: &'static str = "127.0.0.1:53";
+const DNS_SERVER: &'static str = "0.0.0.0:53";
 
 
 /// Bind a UdpSocket for DNS_SERVER.
@@ -67,10 +67,10 @@ fn main() {
                     match build_response(packet) {
                         Ok(response_packet) => {
                             socket.send_to(&response_packet, &src).unwrap();
-                            println!("OK: {:?}", &lookup_name);
+                            println!("OK: {:?} {}", &lookup_name, &src);
                         },
                         Err(e) => {
-                            println!("ERROR: {:?} {:?}", &lookup_name, e);
+                            println!("ERROR: {:?} {:?} {}", &lookup_name, e, &src);
                         }
                     }
                 });
