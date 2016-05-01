@@ -35,7 +35,7 @@ const DNS_SERVER: &'static str = "0.0.0.0:53";
 
 
 /// Bind a UdpSocket for DNS_SERVER.
-/// Listens for DNS packets and returns a response if no errors occur
+/// Listens for DNS packets and sends a response if no errors occur
 fn main() {
 
     let bind_attempt = UdpSocket::bind(DNS_SERVER);
@@ -75,7 +75,6 @@ fn main() {
 }
 
 /// Builds a response given a packet, and returns the bytes.
-/// Note: Only handles A questions. Need to create better errors.
 fn build_response(packet: Packet) -> Result<Vec<u8>, Error> {
     if packet.header.questions == 1 {
         let question = &packet.questions[0];
@@ -128,7 +127,6 @@ fn build_response(packet: Packet) -> Result<Vec<u8>, Error> {
 }
 
 /// Translates a DNS question into a Google API Request
-/// This should return a result instead of option
 fn translate_question(question: &Question) -> Result<Url, Error> {
 
     let name = match question.qtype {
@@ -166,7 +164,7 @@ fn make_request(request: Url) -> Result<APIResponse, Error> {
 }
 
 /// Workaround for dns_pasrser, this is done since
-/// dns-parser improperly formats fqdns.
+/// dns-parser improperly formats fqdns by removing the trailing dot.
 fn remove_fqdn_dot (domain_name: &str) -> String {
     let mut domain_name_string = domain_name.to_owned();
     domain_name_string.pop();
