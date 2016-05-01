@@ -20,10 +20,11 @@ We were able to create a working DNS server with almost the same average respons
 rust-DNSoverHTTPS handles a standard DNS query in the following steps:
 
 1. The server listens for incoming UDP packets on port 53. When a packet is received, a new thread is spawned.
-2. The packet is parsed into a DNS packet using `dns-parser`.
-3. If the parsing is successful, a HTTPS request is constructed and sent using `hyper`.
-4. The response is deserialized using serde.
-5. A DNS answer packet is constructed and sent back to the requestor. 
+2. The packet is passed to `worker.rs`, where it is handled to be returned.
+3. In `worker.rs`, the packet is parsed into a DNS packet using `dns-parser`.
+4. If the parsing is successful, a HTTPS request is constructed and sent using `hyper`.
+5. The response is deserialized using serde.
+6. A DNS answer packet is constructed and sent back to the requestor. 
 
 As mentioned above, our work was split between our fork of dns-parser and the actual server itself. This gave us experience working with an already existing codebase and choosing the design for our own code.
 
@@ -31,9 +32,10 @@ As mentioned above, our work was split between our fork of dns-parser and the ac
 dns-parser was chosen to parse DNS packets. Unfortunately, while library was great for parsing packets, it had very little support for building packets. In our fork of dns-parser, the majority of our work was in [`builder.rs`](http://david-cao.github.io/rustdocs/dns_parser/builder/struct.Builder.html). We implemented many functions including `new_response` and `add_question`. We also implemented DNS packet compression.
 
 ### High level overview of components
-* `main.rs` - sends and receives DNS UDP packets
-* `structs.rs` - structs used for serde deserialization of Google API responses.
-* `errors.rs` - enum of possible errors that can occur
+* `main.rs` - Simple implementation of a DNS server. Spawns a thread for each connection.
+* `worker.rs` - Takes in a packet, parses it, sends it to the Google API, and builds a response to return.
+* `structs.rs` - Structs used for serde deserialization of Google API responses.
+* `errors.rs` - Enum of possible errors that can occur.
 
 ## Benchmarks/Results
 We found that on average our DNS server had under 100 ms response time for queries when built with the `--release` flag. This is only slightly slower than the mean response time of the University of Pennsylvania's DNS Servers. Our server also has the security benefits of HTTPS over DNS.
