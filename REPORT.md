@@ -81,7 +81,7 @@ Additionally rust-DNSoverHTTPS will probably fail most DNS health checks since q
 We had a great time working on rust-DNSoverHTTPS. We gained a huge amount experience with Rust and the DNS protocol.
 
 ### What went well
-It worked! There were a few times during the project that we were not sure if we could get everything working. For example, when we first implemented A and CNAME records, we could get extremely simple websites to load, but they took almost 10 seconds to do so. We realized that this was because we panic'd on empty responses and/or the website that was loaded was loading more things in turn, such as scripts or fonts hosted at Google. Fortunately, we were able to fix this and got every working.
+It worked! There were a few times during the project that we were not sure if we could get everything working. Fortunately, we did. We are also proud of our implementation DNS Compression. We use a HashMap to to store labels -> offsets. When we're writing a new name, we check if it already exists in the HashMap. If it does, the byte offset is written instead of the entire name.
 
 ### What could have gone better
 The main goal of our project was to support the minimum amount of features of the protocol needed to browse the web using our DNS server. We assumed that we would only need to implement A and CNAME record types. Because of this we didn't implement a system that made it easy to support various record types. This made adding later types more difficult. Specifically, in `add_answer` we pass in a vec of bytes, which we compute ourselves based on the type. In the future, we could modify `dns_parser::rrdata` to use it for record type serialization (instead of just deserialization).
