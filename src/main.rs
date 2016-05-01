@@ -12,18 +12,13 @@ extern crate serde_json;
 extern crate dns_parser;
 extern crate hyper;
 
-extern crate byteorder;
-use byteorder::{BigEndian, ByteOrder};
-
 use std::io::Read;
 
 use std::net::UdpSocket;
-use dns_parser::{Packet, Name, Question, QueryType, Builder, Type, QueryClass, Class, ResponseCode};
+use dns_parser::{Packet, Question, QueryType, Builder, Type, QueryClass, Class, ResponseCode};
 
 use hyper::{Url, Client};
 use hyper::header::{Connection, Host};
-
-use std::net::Ipv4Addr;
 
 use std::thread;
 
@@ -31,12 +26,12 @@ mod error;
 use error::Error;
 
 mod structs;
-use structs::{APIResponse, APIQuestion, APIAnswer};
+use structs::APIResponse;
 
 /// The IP address of dns.google.com
 const GOOGLE_IP: &'static str = "https://4.31.115.251/";
 
-/// The IP and Port to run the server on. Usually localhost:53
+/// The IP and Port to run the server on.
 const DNS_SERVER: &'static str = "0.0.0.0:53";
 
 

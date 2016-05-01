@@ -6,7 +6,6 @@ authors = ["Graham Mosley <gmosley@seas.upenn.edu>", "David Cao <davidcao@seas.u
 [dependencies]
 dns-parser = { git = "https://github.com/david-cao/dns-parser" }
 hyper = "0.8.0"
-serde = "*"
-serde_json = "*"
-serde_macros = "*"
-byteorder = "*"
+serde = "0.7.0"
+serde_json = "0.7.0"
+serde_macros = "0.7.2"
