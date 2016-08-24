@@ -7,7 +7,7 @@ Developed by David Cao and Graham Mosley as a final project for [CIS 198](http:/
 The final report can be found [here](https://github.com/gmosley/rust-DNSoverHTTPS/blob/master/REPORT.md).
 
 ### Setup
-rust-DNSoverHTTPS uses rust-nightly. At the time of writing, serde did not compile on nightly. It was testing using nightly-2016-04-15.
+rust-DNSoverHTTPS uses rust-nightly. At the time of writing, serde did not compile on nightly. It was tested using nightly-2016-04-15.
 
 ```
 git clone https://github.com/gmosley/rust-DNSoverHTTPS.git
